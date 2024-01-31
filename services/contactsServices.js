@@ -3,14 +3,22 @@
 // const nanoid = require("nanoid");
 
 import { promises as fs } from "fs";
-import path from "path";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { nanoid } from "nanoid";
 
-const contactsPath = path.join(__dirname, "./db/contacts.json");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const contactsPath = join(__dirname, "../db/contacts.json");
 
 const listContacts = async () => {
-  const data = await fs.readFile(contactsPath);
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(contactsPath);
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error reading contacts file:", error.message);
+    throw error;
+  }
 };
 
 const getContactById = async (contactId) => {
@@ -33,7 +41,7 @@ const addContact = async ({ name, email, phone }) => {
   return newContact;
 };
 
-const updateContact = async (id, { name, email, phone }) => {
+const updateContactDetails = async (id, { name, email, phone }) => {
   const contacts = await listContacts();
   const index = contacts.findIndex((item) => item.id === id);
   if (index === -1) return null;
@@ -60,6 +68,6 @@ export {
   listContacts,
   getContactById,
   addContact,
-  updateContact,
+  updateContactDetails,
   removeContact,
 };
