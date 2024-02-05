@@ -71,20 +71,22 @@ export const createContact = async (req, res) => {
 
 export const updateContact = async (req, res) => {
   const { id } = req.params;
-  const { name, email, phone } = req.body;
+  const { name, email, phone, favorite } = req.body;
 
   try {
-    if (!name && !email && !phone) {
+    if (!name && !email && !phone && favorite === undefined) {
       return res
         .status(400)
         .json({ message: "Body must have at least one field" });
     }
+
     await updateContactSchema.validateAsync({ name, email, phone });
 
     const updatedContact = await updateContactDetails(id, {
       name,
       email,
       phone,
+      favorite,
     });
 
     if (updatedContact) {
@@ -94,6 +96,32 @@ export const updateContact = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating contact:", error.message);
+    res.status(400).json({ message: error.message });
+  }
+};
+export const updateContactStatus = async (req, res) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+
+  try {
+    if (favorite === undefined || favorite === null) {
+      return res
+        .status(400)
+        .json({ message: "Body must contain 'favorite' field" });
+    }
+    if (typeof favorite !== "boolean") {
+      return res.status(400).json({ message: "'favorite' must be a boolean" });
+    }
+
+    const updatedContact = await updateContactStatus(contactId, { favorite });
+
+    if (updatedContact) {
+      res.status(200).json(updatedContact);
+    } else {
+      res.status(404).json({ message: "Not found" });
+    }
+  } catch (error) {
+    console.error("Error updating contact status:", error.message);
     res.status(400).json({ message: error.message });
   }
 };
