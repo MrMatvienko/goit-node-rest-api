@@ -119,6 +119,5 @@ export const updateContactStatus = async (req, res) => {
   } catch (error) {
     console.error("Error updating contact status:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
-    а;
   }
 };
