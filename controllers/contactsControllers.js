@@ -9,6 +9,7 @@ import {
   createContactSchema,
   updateContactSchema,
 } from "../schemas/contactsSchemas.js";
+import { Contact } from "../models/contactModel.js";
 
 export const getAllContacts = async (req, res) => {
   try {
@@ -104,24 +105,20 @@ export const updateContactStatus = async (req, res) => {
   const { favorite } = req.body;
 
   try {
-    if (favorite === undefined || favorite === null) {
-      return res
-        .status(400)
-        .json({ message: "Body must contain 'favorite' field" });
-    }
-    if (typeof favorite !== "boolean") {
-      return res.status(400).json({ message: "'favorite' must be a boolean" });
-    }
-
-    const updatedContact = await updateContactStatus(contactId, { favorite });
+    const updatedContact = await Contact.findByIdAndUpdate(
+      contactId,
+      { favorite },
+      { new: true }
+    );
 
     if (updatedContact) {
       res.status(200).json(updatedContact);
     } else {
-      res.status(404).json({ message: "Not found" });
+      res.status(404).json({ message: "Contact not found" });
     }
   } catch (error) {
     console.error("Error updating contact status:", error.message);
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: "Internal Server Error" });
+    а;
   }
 };

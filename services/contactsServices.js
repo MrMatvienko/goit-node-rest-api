@@ -52,7 +52,7 @@ const updateContactDetails = async (id, { name, email, phone, favorite }) => {
 
 const removeContact = async (id) => {
   try {
-    return await Contact.findByIdAndRemove(id);
+    return await Contact.findOneAndDelete({ _id: id });
   } catch (error) {
     console.error("Error deleting contact:", error.message);
     throw error;
