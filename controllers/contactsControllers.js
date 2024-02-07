@@ -26,15 +26,14 @@ export const getOneContact = async (req, res) => {
 
   try {
     const contact = await getContactById(id);
-
     if (contact) {
       res.status(200).json(contact);
     } else {
-      res.status(404).json({ message: "Not found" });
+      res.status(404).json({ message: "Contact not found" });
     }
   } catch (error) {
     console.error("Error getting contact by id:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(404).json({ message: "Contact not found" });
   }
 };
 
@@ -43,15 +42,13 @@ export const deleteContact = async (req, res) => {
 
   try {
     const deletedContact = await removeContact(id);
-
     if (deletedContact) {
       res.status(200).json(deletedContact);
     } else {
-      res.status(404).json({ message: "Not found" });
+      res.status(404).json({ message: "Contact not found" });
     }
   } catch (error) {
-    console.error("Error deleting contact:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(404).json({ message: "Contact not found" });
   }
 };
 
