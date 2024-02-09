@@ -100,6 +100,11 @@ export const updateContact = async (req, res) => {
 export const updateContactStatus = async (req, res) => {
   const { contactId } = req.params;
   const { favorite } = req.body;
+  if (favorite === undefined || favorite === null) {
+    return res
+      .status(400)
+      .json({ message: "Body must contain 'favorite' field" });
+  }
 
   try {
     const updatedContact = await Contact.findByIdAndUpdate(
