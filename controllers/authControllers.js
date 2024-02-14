@@ -7,12 +7,10 @@ import { HttpError } from "../helpers/HttpError.js";
 export const register = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
-  // Перевірка чи введено обов'язкові поля
   if (!email || !password) {
     throw new HttpError(400, "Email and password are required");
   }
 
-  // Перевірка чи користувач з таким email вже існує
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new HttpError(409, "Email in use");
@@ -21,20 +19,16 @@ export const register = catchAsync(async (req, res) => {
   // Хешування паролю
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Створення нового користувача без токену
   const newUser = await User.create({
     email,
     password: hashedPassword,
-    subscription: "starter", // По замовчуванню
+    subscription: "starter",
   });
 
-  // Генерація токену після створення користувача
   newUser.token = jwtService.signToken(newUser._id);
 
-  // Збереження користувача з токеном
   await newUser.save();
 
-  // Повернення успішної відповіді
   res.status(201).json({
     token: newUser.token,
     user: {
@@ -47,29 +41,22 @@ export const register = catchAsync(async (req, res) => {
 export const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
-  // Перевірка чи введено обов'язкові поля
   if (!email || !password) {
     throw new HttpError(400, "Email and password are required");
   }
 
-  // Пошук користувача за email
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     throw new HttpError(401, "Email or password is wrong");
   }
 
-  // Перевірка паролю
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw new HttpError(401, "Email or password is wrong");
   }
 
-  // Генерація токена
-  const token = jwtService.signToken(user._id);
-
-  // Відправлення успішної відповіді
   res.status(200).json({
-    token,
+    token: user.token,
     user: {
       email: user.email,
       subscription: user.subscription,
@@ -78,72 +65,31 @@ export const login = catchAsync(async (req, res) => {
 });
 
 export const logout = async (req, res) => {
-  try {
-    // Отримати токен з заголовка Authorization
-    const token = req.headers.authorization;
+  const { _id } = req.user;
+  const result = await User.findByIdAndUpdate(
+    _id,
+    { token: "" },
+    { new: true }
+  );
 
-    // Перевірити, чи токен існує
-    if (!token) {
-      throw new HttpError(401, "Not authorized");
-    }
-
-    // Розшифрувати та перевірити токен
-    const decoded = jwt.verify(token.split(" ")[1], serverConfig.jwtSecret);
-
-    // Отримати id користувача з токена
-    const userId = decoded.id;
-
-    // Знайти користувача за _id
-    const user = await User.findById(userId);
-
-    // Перевірити, чи користувач існує
-    if (!user) {
-      throw new HttpError(401, "Not authorized");
-    }
-
-    // Знищити токен користувача
-    user.token = null;
-    await user.save();
-
-    // Успішна відповідь
-    res.status(204).end();
-  } catch (error) {
-    // В разі помилки повернути помилку Unauthorized
-    throw new HttpError(401, "Not authorized");
+  if (!result) {
+    throw new HttpError(404, "User not found");
   }
+  res.status(204).end();
 };
 
 export const getCurrentUser = async (req, res) => {
   try {
-    // Отримати токен з заголовка Authorization
-    const token = req.headers.authorization;
-
-    // Перевірити, чи токен існує
-    if (!token) {
-      return res.status(401).json({ message: "Not authorized" });
+    if (!req.user) {
+      throw new Error("User not found");
     }
 
-    // Розшифрувати та перевірити токен
-    const decoded = jwt.verify(token.split(" ")[1], serverConfig.jwtSecret);
-
-    // Отримати id користувача з токена
-    const userId = decoded.id;
-
-    // Знайти користувача за _id
-    const user = await User.findById(userId);
-
-    // Перевірити, чи користувач існує
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    // Повернути дані користувача у відповіді
+    const { email, subscription } = req.user;
     res.status(200).json({
-      email: user.email,
-      subscription: user.subscription,
+      email,
+      subscription,
     });
   } catch (error) {
-    // В разі помилки повернути помилку Unauthorized
-    return res.status(401).json({ message: "Not authorized" });
+    res.status(500).json({ message: error.message });
   }
 };
