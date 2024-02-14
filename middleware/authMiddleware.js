@@ -3,7 +3,8 @@ import { HttpError } from "../helpers/HttpError.js";
 import { serverConfig } from "../configs/serverConfig.js";
 import { User } from "../models/userModel.js";
 
-const { SECRET_KEY } = process.env;
+const { jwtSecret } = process.env;
+console.log({ jwtSecret });
 
 const verifyToken = async (req, res, next) => {
   const { authorization = "" } = req.headers;
@@ -12,7 +13,7 @@ const verifyToken = async (req, res, next) => {
     next(new HttpError(401, "Not authorized"));
   }
   try {
-    const { id } = jwt.verify(token, SECRET_KEY);
+    const { id } = jwt.verify(token, jwtSecret);
     const user = await User.findById(id);
     if (!user || user.token !== token || !user.token) {
       next(new HttpError(401, "Not authorized"));
