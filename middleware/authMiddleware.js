@@ -3,8 +3,6 @@ import { HttpError } from "../helpers/HttpError.js";
 import { User } from "../models/userModel.js";
 
 const { JWT_SECRET } = process.env;
-console.log(JWT_SECRET);
-
 const verifyToken = async (req, res, next) => {
   const { authorization = "" } = req.headers;
   const [bearer, token] = authorization.split(" ");
