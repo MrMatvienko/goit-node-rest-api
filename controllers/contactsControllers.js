@@ -58,7 +58,9 @@ export const createContact = async (req, res) => {
   try {
     await createContactSchema.validateAsync({ name, email, phone });
 
-    const newContact = await addContact({ name, email, phone });
+    const owner = req.user ? req.user._id : null;
+
+    const newContact = await addContact({ name, email, phone, owner });
 
     res.status(201).json(newContact);
   } catch (error) {
