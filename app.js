@@ -3,6 +3,8 @@ import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 import contactsRouter from "./routes/contactsRouter.js";
 import { authRouter } from "./routes/authRouter.js";
@@ -30,6 +32,11 @@ app.use(cors());
 app.use(express.json());
 app.use("/users", authRouter);
 app.use("/api/contacts", contactsRouter);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use(express.static(join(__dirname, "public")));
 
 app.use((_, res) => {
   res.status(404).json({ message: "Route not found" });
