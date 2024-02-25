@@ -1,7 +1,6 @@
 import { model, Schema } from "mongoose";
 
 import Joi from "joi";
-import bcrypt from "bcrypt";
 
 const userSchema = new Schema({
   password: {
@@ -22,6 +21,9 @@ const userSchema = new Schema({
     type: String,
     default: null,
   },
+  avatarURL: {
+    type: String,
+  },
 });
 
 const User = model("User", userSchema);
@@ -38,20 +40,21 @@ const validateUser = (user) => {
   return schema.validate(user);
 };
 
-const hashPassword = async (password) => {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-};
+// const hashPassword = async (password) => {
+//   const saltRounds = 10;
+//   return await bcrypt.hash(password, saltRounds);
+// };
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    const hashedPassword = await hashPassword(this.password);
-    this.password = hashedPassword;
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
+// userSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next();
+//   try {
+//     const hashedPassword = await hashPassword(this.password);
+//     this.password = hashedPassword;
+//     this.avatarURL = gravatar.url(this.email, { s: "200", d: "retro" });
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 export { User, validateUser };
