@@ -5,7 +5,9 @@ import {
   login,
   logout,
   register,
+  resendVerificationEmail,
   updateAvatar,
+  verifyUser,
 } from "../controllers/authControllers.js";
 import {
   processAvatar,
@@ -26,4 +28,6 @@ authRouter.patch(
   processAvatar,
   updateAvatar
 );
+authRouter.get("/verify/:verificationToken", verifyUser);
+authRouter.post("/verify", resendVerificationEmail);
 export { authRouter };

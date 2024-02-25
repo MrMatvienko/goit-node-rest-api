@@ -7,5 +7,10 @@ const serverConfig = {
   environment: process.env.NODE_ENV ?? "development",
   jwtSecret: process.env.JWT_SECRET ?? "super-secret",
   jwtExpiresIn: process.env.JWT_EXPIRES ?? "50m",
+  emailFrom: process.env.EMAIL_FROM ?? "admin@example.com",
+  mailtrapHost: process.env.MAILTRAP_HOST ?? "",
+  mailtrapPort: process.env.MAILTRAP_PORT ?? 100,
+  mailtrapUser: process.env.MAILTRAP_USER ?? "",
+  mailtrapPass: process.env.MAILTRAP_PASS ?? "",
 };
 export { serverConfig };

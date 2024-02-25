@@ -8,6 +8,9 @@ import path from "path";
 import Jimp from "jimp";
 import jwt from "jsonwebtoken";
 import { promises as fsPromises } from "fs";
+import { nanoid } from "nanoid";
+import { emailTransporter } from "../services/emailservise.js";
+
 export const register = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
@@ -19,6 +22,9 @@ export const register = catchAsync(async (req, res) => {
     throw new HttpError(409, "Email in use");
   }
 
+  const verificationToken = nanoid();
+  await sendVerificationEmail(email, verificationToken);
+
   const avatarURL = gravatar.url(email, { s: "200", d: "retro" });
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -28,6 +34,7 @@ export const register = catchAsync(async (req, res) => {
     password: hashedPassword,
     subscription: "starter",
     avatarURL,
+    verificationToken,
   });
 
   newUser.token = jwtService.signToken(newUser._id);
@@ -43,6 +50,21 @@ export const register = catchAsync(async (req, res) => {
     },
   });
 });
+
+const sendVerificationEmail = async (email, verificationToken) => {
+  try {
+    const emailConfig = {
+      from: "Todos App Admin <admin@example.com>",
+      to: "arrco@ukr.net",
+      subject: "Email Verification",
+      html: `<p>Please verify your email by <a href="http://localhost:3000/users/verify/${verificationToken}">clicking here</a></p>`,
+    };
+
+    await emailTransporter.sendMail(emailConfig);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
@@ -146,4 +168,50 @@ export const updateAvatar = async (req, res) => {
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
   }
+};
+
+export const verifyUser = async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const user = await User.findOne({ verificationToken });
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: "",
+  });
+
+  res.json({
+    message: "Verification successful",
+  });
+};
+
+export const resendVerificationEmail = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new HttpError(404, "User not found");
+  }
+  if (user.verify) {
+    res.status(400).json({ message: "Verification has already been passed" });
+    return;
+  }
+
+  const verifyEmail = {
+    to: email,
+    subject: "Сonfirm your registration",
+    html: `<a target="_blank" href="http://localhost:3000/api/auth/verify/${user.verificationToken}">Click to confirm your registration</a>`,
+  };
+
+  await sendVerificationEmail(verifyEmail);
+
+  res.json({
+    message: "Verification email sent",
+  });
 };
