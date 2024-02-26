@@ -37,8 +37,6 @@ export const register = catchAsync(async (req, res) => {
     verificationToken,
   });
 
-  newUser.token = jwtService.signToken(newUser._id);
-
   await newUser.save();
 
   res.status(201).json({
@@ -82,6 +80,9 @@ export const login = catchAsync(async (req, res) => {
   if (!isPasswordValid) {
     throw new HttpError(401, "Email or password is wrong");
   }
+  const token = jwtService.signToken(user._id);
+  user.token = token;
+  await user.save();
 
   res.status(200).json({
     token: user.token,
